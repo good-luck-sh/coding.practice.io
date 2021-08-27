@@ -1,0 +1,166 @@
+package NewProject;
+
+import java.awt.Color;
+
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+
+
+public class CoinEat extends JFrame{//jframe(UI)를 만들기 위하여 상속받음
+	//버퍼와 화면의 이미지를 얻어올 그래픽 객체를 생성해줌
+	private Image bufferImage;
+	private Graphics screenGraphic;
+	
+	
+	private Image backgroundImage = new ImageIcon("src//NewProject//Source_Folder//P20210612_202408083_EC2C5EED-D68A-4BF2-9B1F-D68D3221E59A.JPG").getImage();
+	//import javax.swing.ImageIcon; 을 입력해야 작성가능함. ctrl+shift+o키를 누르면 됨, 경로를 입력을 잘해야함. 클릭후 복붙도 추천
+	//플레이어와 코인이미지도 출력
+	private Image player = new ImageIcon("src//NewProject//Source_Folder//free-icon-dog-outline-chasing-balloons-26191.png").getImage();
+	private Image coin = new ImageIcon("src//NewProject//Source_Folder//free-icon-roasted-chicken-3823911.png").getImage();
+	private int playerX, playerY;//player 의 좌표 X 값과 Y값
+	//나중에 플레이어와 코인의 충돌 여부를 판단하기 위해 각이미지의 크기도 변수에 담아 넣음
+	private int playerWidth =player.getWidth(null);
+	private int playerHeight =player.getHeight(null);
+	//이로써 player의 가로와 세로 사이즈를 구할 수 있게 됨.
+	private int coinX, coinY;//마찬가지로 coin의 좌표X와 Y를 작성함. 
+	private int coinWidth = coin.getWidth(null);
+	private int coinHeight = coin.getHeight(null);
+	//마찬가지로 가로와 세로 사이즈를 담을 수 있게 입력함.
+	
+	private int score;
+	//점수를 입력할 변수를 선언함
+	//키보드의 움직임을 받을 boolean변수의 up, down, left, right를 선언함
+	private boolean up, down, left, right;
+	
+	
+	//상속받은 Jfram은 위치와, 좌표의 값을 설정, 변수의 값을 설정함.
+	
+	
+	public CoinEat(){//coinEat이라는 class를  작성, 기초적인 JFrame의 코드
+		setTitle("동전 먹기 게임");//제목을 작성
+		setVisible(true);//Jframe의 창을 사용자에게 나타낼것인지에 대한 
+		//설정값으로 기본값은 false로 작성되어있음
+		setSize(1200,1200);//크기설정값입력
+		setLocationRelativeTo(null);
+		//JFrame의 기본 값으로 정중앙에 위치한다는 값으로 항상 세트처럼 사용되는 메소드
+		setResizable(false);//창의 크기를 조절할 수 없게 할지 여부
+		lnit();//lnit를 가져오는 메소드를 추가함.
+
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//창이 꺼지면 시스템이 자동으로 꺼질 수 있도록 설정함.
+		//설정하지 않으면 프로세스가 계속 유지됨 
+		//코인먹는 게임의 화면구현을 작성함.
+		addKeyListener(new KeyAdapter() {//이벤트리스너이다. 
+			public void KeyPressed(KeyEvent e) {//키를 누르는 순간에 대한 keylistener의 메서드
+				switch(e.getKeyCode()){//boolean값으로 작성한 이유는 대각선을 받아들일 수 없기 때문이다.
+					//getKeyCode()에서 리턴한 키코드와 가상의 키값을 비교하여야함.
+					case KeyEvent.VK_W://W가 눌리면 위로 간다고 값을 설정함
+						up = true;
+						break;
+					case KeyEvent.VK_D:
+						right = true;
+						break;
+					case KeyEvent.VK_S:
+						down = true;
+						break;
+					case KeyEvent.VK_A:
+						left = true;
+						break;
+
+				}
+			}
+		});
+		//이제 키를 떼었을 때 실행할 메소드를 구현함.
+		addKeyListener(new KeyAdapter() {//이벤트리스너는 안쪽에 작성하는 것을 잊지말자.
+			public void KeyReleased(KeyEvent e) {
+				switch(e.getKeyCode()) {//위와 마찬가지로 설정한다. 그리고 떼는순간에는 해제를 해야하기때문에 해제값을 입력한다.
+				case KeyEvent.VK_W://W가 눌리면 위로 간다고 값을 설정함
+					up = false;
+					break;
+				case KeyEvent.VK_D:
+					right = false;
+					break;
+				case KeyEvent.VK_S:
+					down = false;
+					break;
+				case KeyEvent.VK_A:
+					left = false;
+					break;
+				
+				}
+			}
+		});
+		//kebord의 만들어놓은 메소드를 계속 반복시킴
+	
+		
+		while(true) {
+			//대기시간을 입력함, 오류메세지를 입력
+			try {
+				Thread.sleep(20);//쓰레드 문법
+			}
+			catch(InterruptedException e){
+				e.printStackTrace();//오류메세지를 출력하세요
+			}
+			keyProcess();
+		}
+	
+	}
+	//화면이 깜박여서 피할 수 있도록 더블페어링 기법을 입력함. 
+	public void paint(Graphics g) {//그래픽객체에 대해서 작성함
+		bufferImage = createImage(1200,1200);
+		screenGraphic = bufferImage.getGraphics();
+		screenDraw(screenGraphic);
+		g.drawImage(bufferImage,0,0,null);
+		
+		
+		
+		
+	}
+	public void screenDraw(Graphics g) {//출력하는 메소드를 작성함 import java.awt.Graphics;,import java.awt.Image;를 추가함
+		g.drawImage(backgroundImage,0, 0, null);//그런후 이미지 좌표 x와 y, null을 추가함
+		//lnit의 메소드가 실행 될 수 있도록 play와 coin의 값을 입력함
+		g.drawImage(player,playerX,playerY,null);
+		g.drawImage(coin,coinX,coinY,null);
+		//점수값도 출력되도록 설정
+		g.setColor(Color.white);//색상
+		g.setFont(new Font("Arial",Font.BOLD,20));//폰트글씨체와 두꺼움
+		//drawString(출력문자, x좌표 ,y좌표 를 입력하여 값이 출력되도록.
+		g.drawString("Score:"+score,30,80);//Y값은 항상 frame을 생각하여 크게 잡아준다.
+		//paint의 경우 그래픽으로 나오는 수를 입력함,
+		this.repaint();//화면에 다시 그려지도록 호출함
+		
+	}
+	//항상 x, y를 표시할때는 그 배열에서는 -1을 해주는 것이 중요함.
+	public void lnit() {//게임을 시작할 떄 초기화 해줄 lnit의 메소드를 추가함.
+		score = 0;//score의 점수값을 초기화함
+		playerX = (1201 -playerWidth-1)/2;//플레이어의 좌표를 입력함, 정중앙에 올 수 있도록
+		playerY = (1201- playerHeight-1)/2;//창의 크기 - 플레이어의높이 /2즉 정중앙에 올 수 있는 계산식
+		//코인의 위치는 랜덤으로 진행될 수 있도록 math.random값을 입력함.
+		coinX=(int)(Math.random())*(1201-coinWidth);//코인의 X값을 지정
+		//Math.random()을 이용하여 난수를 표현(정수로 표현하도록 입력함)*(총화면 - 플레이어값)을 뺌
+		coinY=(int)(Math.random())*(1201- coinHeight+30)-30;//프레임의 값으로 인하여 Y측은 30을 뺌, 수정함
+		//lnit는 점수값을 작성하고, x와 y의 좌표를 입력함.
+		
+	}
+	public void keyProcess() {//boolean 값으로 player 이동시킬 메소드의 값을 입력함.
+		if(up&&playerY-3>30)playerY-=50;//
+		if(down&&playerY+playerHeight+3<1200) playerY+=50;
+		if(left&&playerX-3>0)playerX-=50;
+		if(right&&playerX+playerWidth+3<1200)playerX+=50;
+		
+		
+	}
+	public static void main(String[] args) {
+		new CoinEat();// class CoinEat을 메인메서드에 불러옴
+	
+		
+
+	}
+
+}
